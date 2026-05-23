@@ -14,10 +14,10 @@ const SideBar = () => {
         setMobileOpen(false);
     },[pathname]);
 
-    const role = "ADMIN" || "EMPLOYEE";
+    const role = "" || "EMPLOYEE";
     const navItems = [
         {name:"Dashboard", href:"/dashboard", icon: LayoutGridIcon},
-        role === "ADMIN" ?{name:"Employee", href:"/employee", icon: UserIcon}:{name:"Attendance", href:"/attendance", icon: CalendarIcon},
+        role === "ADMIN" ?{name:"Employee", href:"/employee", icon: UserIcon}:{name:"Attendence", href:"/attendence", icon: CalendarIcon},
         {name:"Leave", href:"/leave", icon: FileTextIcon},
         {name:"Payslips", href:"/payslips", icon: DollarSignIcon},
         {name:"Settings", href:"/settings", icon: SettingsIcon},
