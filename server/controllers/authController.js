@@ -1,10 +1,8 @@
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
+
 // Login for Employee and admin
-
-
-
 //POST /api/auth/login
 export const login = async (req, res) => {
     try{
@@ -43,3 +41,32 @@ export const login = async (req, res) => {
     }
 }
 
+//Get session for employee and admin
+export const session = (req,res)=>{
+    const session = req.session;
+    return res.jason({user:session})
+}
+
+//Change password for employee and admin
+//POST /api/auth/change-password
+export const changePassword = async (req, res) => {
+    try{
+        const session = req.session;
+        const { currentPassord, newPassword } = req.body;
+        if(!changePassword || !newPassword){
+            return res.status(400).json({error:"Both passowrd are required"});
+        }
+        const user = await User.findById(session.userId)
+        if(!user) return res.status(404).json({error: "user not found"});
+        const isValid = await bcrypt.compare(currentPassord, user.password);
+        if(!isValid) return res.status(400).json({
+            error: "Current password is incorrect"
+        });
+        const hashed = await bcrypt.hash(newPassword, 10);
+        await User.findByIdAndUpdate(session.userId, {password:hashed})
+        return res.json({success: true})
+    }
+    catch(error) {
+      return res.status(500).json({error: "Failed to change password"})
+    }
+}
