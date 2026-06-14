@@ -1,5 +1,7 @@
 import { Loader2Icon, LockIcon, X } from "lucide-react";
 import React, { useState } from "react";
+import api from "../api/axios";
+import toast from "react-hot-toast";
 
 const ChangePasswordModal = ({ open, onClose }) => {
   const [loading, setLoading] = useState(false);
@@ -7,6 +9,34 @@ const ChangePasswordModal = ({ open, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setMessage({ type: "", text: "" });
+
+    try {
+      const form = new FormData(e.target);
+      const payload = {
+        currentPassword: form.get("currentPassword"),
+        newPassword: form.get("newPassword"),
+      };
+
+      const res = await api.post("/auth/change-password", payload);
+      if (res.data?.success) {
+        setMessage({ type: "success", text: "Password updated successfully" });
+        toast.success("Password updated");
+        setTimeout(() => onClose(), 900);
+      } else {
+        setMessage({ type: "error", text: res.data?.error || "Update failed" });
+      }
+    } catch (error) {
+      const msg =
+        error?.response?.data?.error ||
+        error?.message ||
+        "Unable to update password";
+      setMessage({ type: "error", text: msg });
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!open) return null;
@@ -16,10 +46,9 @@ const ChangePasswordModal = ({ open, onClose }) => {
       onClick={onClose}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
-      ChangePasswordModal
-      <div className="absolute inset- bg-black/40 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
       <div
-        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in"
+        className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 pb-0">
@@ -38,11 +67,10 @@ const ChangePasswordModal = ({ open, onClose }) => {
             <div
               className={`p-3 rounded-xl text-sm flex items-start gap-3 ${message.type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-rose-50 text-rose-700 border border-rose-200"}`}
             >
-              <div
+              <span
                 className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${message.type === "success" ? "bg-emerald-500" : "bg-rose-500"}`}
-              >
-                {message.text}
-              </div>
+              />
+              <p>{message.text}</p>
             </div>
           )}
           <div>
@@ -68,8 +96,7 @@ const ChangePasswordModal = ({ open, onClose }) => {
 
             <button
               type="submit"
-              disabled={loading} 
-              onClick={onClose}
+              disabled={loading}
               className="btn-primary flex-1 flex justify-center items-center gap-2"
             >
               {loading && <Loader2Icon className="w-4 h-4 animate-spin" />}

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Loader2, Save, User } from "lucide-react";
+import api from "../api/axios";
+import toast from "react-hot-toast";
 const ProfileForm = ({ initialData, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -7,6 +9,27 @@ const ProfileForm = ({ initialData, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setMessage("");
+    if (initialData?.isDeleted) return;
+    const form = new FormData(e.target);
+    const payload = {
+      bio: form.get("bio") || "",
+    };
+
+    setLoading(true);
+    try {
+      await api.post("/profile", payload);
+      setMessage("Profile updated");
+      toast.success("Profile updated");
+      onSuccess && onSuccess();
+    } catch (err) {
+      const msg = err?.response?.data?.error || err?.message || "Update failed";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
   return (
     <form onSubmit={handleSubmit} className="card p-5 sm:p-6 mb-6">

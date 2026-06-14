@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Loading from "../components/Loading";
-import { dummyLeaveData } from "../assets/assets";
 import {
   PalmtreeIcon,
   PlusIcon,
@@ -9,20 +8,31 @@ import {
 } from "lucide-react";
 import LeaveHistory from "../components/leave/LeaveHistory";
 import ApplyLeaveModal from "../components/leave/ApplyLeaveModal";
-
+import { useAuth } from "../context/AuthContext";
+import toast from "react-hot-toast";
+import api from "../api/axios";
 function Leave() {
+  const { user } = useAuth();
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
-  const isAdmin = false;
+  const isAdmin = user?.role === "ADMIN";
 
-  const fetchLeaves = useCallback(() => {
-    setLeaves(dummyLeaveData);
-    setTimeout(() => {
+  const fetchLeaves = useCallback(async () => {
+    try {
+      const res = await api.get("/leave");
+      setLeaves(res.data.data || []);
+      if (res.data.employee?.isDeleted) setIsDeleted(true);
+    } catch (error) {
+      toast.error(error?.response?.data?.error || error.message);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   }, []);
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
 
   useEffect(() => {
     fetchLeaves();
@@ -31,9 +41,9 @@ function Leave() {
   if (loading) return <Loading />;
 
   const approvedLeaves = leaves.filter((l) => l.status === "APPROVED");
-  const sickCount = approvedLeaves.filter((l) => (l.type = "SICK")).length;
-  const casualCount = approvedLeaves.filter((l) => (l.type = "CASUAL")).length;
-  const annualCount = approvedLeaves.filter((l) => (l.type = "ANNUAL")).length;
+  const sickCount = approvedLeaves.filter((l) => l.type === "SICK").length;
+  const casualCount = approvedLeaves.filter((l) => l.type === "CASUAL").length;
+  const annualCount = approvedLeaves.filter((l) => l.type === "ANNUAL").length;
 
   const leaveStats = [
     { label: "Sick Leave", value: sickCount, icon: ThermometerIcon },
@@ -90,7 +100,7 @@ function Leave() {
       <LeaveHistory leaves={leaves} isAdmin={isAdmin} onUpdate={fetchLeaves} />
       <ApplyLeaveModal
         open={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={handleCloseModal}
         onSuccess={fetchLeaves}
       />
     </div>

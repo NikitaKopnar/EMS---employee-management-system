@@ -1,5 +1,7 @@
 import { CalendarDays, FileText, Loader2, Send, X } from "lucide-react";
 import React, { useState } from "react";
+import api from "../../api/axios";
+import toast from "react-hot-toast";
 
 const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
@@ -9,12 +11,30 @@ const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
   const minDate = tmr.toISOString().split("T")[0];
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      await api.post("/leave", data);
+
+      toast.success("Leave applied successfully");
+
+      e.target.reset(); // ✅ reset form
+      onSuccess?.(); // refresh data
+      onClose(); // close modal
+    } catch (error) {
+      toast.error(error.response?.data?.error || error?.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 background-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
@@ -92,7 +112,6 @@ const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
               Cancel
             </button>
             <button
-              onClick={onClose}
               disabled={loading}
               type="submit"
               className="btn-primary flex flex-1 items-center justify-center gap-2"

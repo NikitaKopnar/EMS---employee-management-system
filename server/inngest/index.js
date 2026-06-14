@@ -143,9 +143,8 @@ const attendanceRemainderCron = inngest.createFunction(
     //Step 6" Send remainder emails
     if(absentEmployees.length > 0) {
         await step.run("send-remainder-emails", async()=>{
-            const emailPromises = absentEmployees.map((emp)=> {
-                //send email
-                sendEmail ({
+            const emailPromises = absentEmployees.map((emp)=>
+                sendEmail({
                     to:emp.email,
                     subject:"Attendance Remainder - Please Mark Your Attendance",
                     body:`
@@ -162,7 +161,10 @@ const attendanceRemainderCron = inngest.createFunction(
                             </div>
                         `
                 })
-            })
+            );
+
+            // Await all email send promises so Inngest step waits for completion
+            await Promise.all(emailPromises);
         })
     }
     return { totalActive: activeEmployees.length, onLeave: onLeaveIds.length, checkedIn: checkedInIds.length, absent: absentEmployees.length }

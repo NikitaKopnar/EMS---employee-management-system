@@ -1,30 +1,49 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { dummyEmployeeData, dummyPayslipData } from "../assets/assets";
+import { useAuth } from "../context/AuthContext";
+import api from "../api/axios";
+import toast from "react-hot-toast";
 import Loading from "../components/Loading";
 import PayslipList from "../components/payslip/PayslipList";
 import GeneratePaySlipForm from "../components/payslip/GeneratePaySlipForm";
 const Payslips = () => {
+  const { user, loading: authLoading } = useAuth();
   const [paySlips, setPaySlips] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
-  const isAdmin = true;
+  const isAdmin = user?.role === "ADMIN";
 
   const fetchPayslips = useCallback(async () => {
-    setPaySlips(dummyPayslipData);
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+    try {
+      const res = await api.get("/payslips");
+      setPaySlips(res.data?.data || []);
+    } catch (error) {
+      toast.error(error?.response?.data?.error || error?.message);
+    }
   }, []);
 
-  useEffect(() => {
-    fetchPayslips();
-  }, [fetchPayslips]);
-
-  useEffect(() => {
-    if (isAdmin) setEmployees(dummyEmployeeData);
+  const fetchEmployees = useCallback(async () => {
+    if (!isAdmin) return;
+    try {
+      const res = await api.get("/employees");
+      setEmployees(res.data || []);
+    } catch (error) {
+      toast.error(error?.response?.data?.error || error?.message);
+    }
   }, [isAdmin]);
 
-  if (loading) return <Loading />;
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([fetchPayslips(), fetchEmployees()]);
+      setLoading(false);
+    };
+
+    if (!authLoading) {
+      loadData();
+    }
+  }, [authLoading, fetchPayslips, fetchEmployees]);
+
+  if (authLoading || loading) return <Loading />;
 
   return (
     <div className="animate-fade-in">

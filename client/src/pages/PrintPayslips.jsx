@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { dummyPayslipData } from "../assets/assets";
+import api from "../api/axios";
+import toast from "react-hot-toast";
 import Loading from "../components/Loading";
 import { format } from "date-fns";
 
@@ -10,20 +11,34 @@ const PrintPayslips = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setPayslip(dummyPayslipData.find((slip) => slip._id === id));
-    setTimeout(() => {
+    const fetchPayslip = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get(`/payslips/${id}`);
+        setPayslip(res.data);
+      } catch (error) {
+        toast.error(error?.response?.data?.error || error?.message);
+        setPayslip(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchPayslip();
+    } else {
       setLoading(false);
-    }, 1000);
+    }
   }, [id]);
 
-  if (loading) return <loading />;
+  if (loading) return <Loading />;
   if (!payslip)
     return (
       <p className="text-center py-12 text-slate-400">Payslip not found</p>
     );
 
   return (
-    <div className="max=w=2xl mx-auto p-8 bg-white animate-fade-in">
+    <div className="max-w-2xl mx-auto p-8 bg-white animate-fade-in">
       <div className="text-center border-b border-slate-200 pb-6 mb-8">
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
           PAYSLIP
@@ -79,25 +94,25 @@ const PrintPayslips = () => {
           <tbody>
             <tr className="border-t border-slate-100">
               <td className="py-3 px-4 text-slate-700">Basic Salary</td>
-              <td className="text-right py-3 px-4 text-slat-900 font-medium">
+              <td className="text-right py-3 px-4 text-slate-900 font-medium">
                 ${payslip.basicSalary?.toLocaleString()}
               </td>
             </tr>
             <tr className="border-t border-slate-100">
               <td className="py-3 px-4 text-slate-700">Allowances</td>
-              <td className="text-right py-3 px-4 text-slat-900 font-medium">
+              <td className="text-right py-3 px-4 text-slate-900 font-medium">
                 +${payslip.allowances?.toLocaleString()}
               </td>
             </tr>
             <tr className="border-t border-slate-100">
               <td className="py-3 px-4 text-slate-700">Deductions</td>
-              <td className="text-right py-3 px-4 text-slat-900 font-medium">
+              <td className="text-right py-3 px-4 text-slate-900 font-medium">
                 -${payslip.deductions?.toLocaleString()}
               </td>
             </tr>
             <tr className="border-t-2 border-slate-200 bg-slate-50">
               <td className="py-4 px-4 font-bold text-slate-900">Net Salary</td>
-              <td className="text-right py-4 px-4 font-bold text-slat-900 font-lg">
+              <td className="text-right py-4 px-4 font-bold text-slate-900 text-lg">
                 ${payslip.netSalary?.toLocaleString()}
               </td>
             </tr>
@@ -109,7 +124,7 @@ const PrintPayslips = () => {
           className="btn-primary print:hidden"
           onClick={() => window.print()}
         >
-          Print Payslip
+          Download Payslip
         </button>
       </div>
     </div>

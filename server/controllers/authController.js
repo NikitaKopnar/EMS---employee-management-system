@@ -44,7 +44,7 @@ export const login = async (req, res) => {
 //Get session for employee and admin
 export const session = (req,res)=>{
     const session = req.session;
-    return res.jason({user:session})
+    return res.json({user:session})
 }
 
 //Change password for employee and admin
@@ -52,13 +52,13 @@ export const session = (req,res)=>{
 export const changePassword = async (req, res) => {
     try{
         const session = req.session;
-        const { currentPassord, newPassword } = req.body;
-        if(!changePassword || !newPassword){
-            return res.status(400).json({error:"Both passowrd are required"});
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: "Both passwords are required" });
         }
-        const user = await User.findById(session.userId)
-        if(!user) return res.status(404).json({error: "user not found"});
-        const isValid = await bcrypt.compare(currentPassord, user.password);
+        const user = await User.findById(session.userId);
+        if (!user) return res.status(404).json({ error: "User not found" });
+        const isValid = await bcrypt.compare(currentPassword, user.password);
         if(!isValid) return res.status(400).json({
             error: "Current password is incorrect"
         });

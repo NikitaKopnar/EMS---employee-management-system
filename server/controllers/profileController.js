@@ -32,7 +32,15 @@ export const updateProfile = async (req, res) => {
         if(employee.isDeleted) {
             return res.status(403).json({error: "Your account is deactivated. You cannot update your profile"})
         }
-        await Employee.findByIdAndUpdate( )    
+        const { bio } = req.body;
+
+        const updated = await Employee.findByIdAndUpdate(
+            employee._id,
+            { bio: bio || employee.bio },
+            { new: true }
+        ).lean();
+
+        return res.json({ success: true, data: updated });
         }
     catch(error) {
         return res.status(500).json({error: "Failed to update profile"});

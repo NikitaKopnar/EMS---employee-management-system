@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { dummyProfileData } from "../assets/assets";
+import api from "../api/axios";
 import Loading from "../components/Loading";
 import { LockIcon } from "lucide-react";
 import ProfileForm from "../components/ProfileForm";
@@ -10,10 +10,15 @@ const Settings = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const fetchProfile = async () => {
-    setProfile(dummyProfileData);
-    setTimeout(() => {
+    setLoading(true);
+    try {
+      const res = await api.get("/profile");
+      setProfile(res.data);
+    } catch (error) {
+      setProfile(null);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   useEffect(() => {

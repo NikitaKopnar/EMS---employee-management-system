@@ -1,9 +1,11 @@
 import { Loader2, Plus, X } from "lucide-react";
 import React, { useState } from "react";
+import api from "../../api/axios";
+import toast from "react-hot-toast";
 
 const GeneratePaySlipForm = ({ employees, onSuccess }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setloadin] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   if (!isOpen)
     return (
@@ -17,6 +19,28 @@ const GeneratePaySlipForm = ({ employees, onSuccess }) => {
     );
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
+    try {
+      const formData = new FormData(e.target);
+      const payload = {
+        employeeId: formData.get("employeeId"),
+        month: formData.get("month"),
+        year: formData.get("year"),
+        basicSalary: formData.get("basicSalary"),
+        allowances: formData.get("allowances"),
+        deductions: formData.get("deductions"),
+      };
+
+      await api.post("/payslips", payload);
+      toast.success("Payslip generated successfully");
+      setIsOpen(false);
+      onSuccess?.();
+    } catch (error) {
+      toast.error(error?.response?.data?.error || error?.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -113,7 +137,7 @@ const GeneratePaySlipForm = ({ employees, onSuccess }) => {
               type="submit"
               className="btn-primary flex items-center"
             >
-              {loading && <Loader2 className="w-4 h-4 mr-2 snimate-spin" />}
+              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Generate
             </button>
           </div>
