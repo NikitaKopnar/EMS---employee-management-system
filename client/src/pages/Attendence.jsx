@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import Loading from "../components/Loading";
 import CheckInButton from "../components/attendence/CheckInButton";
 import AttendenceStats from "../components/attendence/AttendenceStats";
-import AttendenceHistory from "../components/attendence/attendenceHistory";
+import AttendenceHistory from "../components/attendence/AttendenceHistory";
 import api from "../api/axios";
 import toast from "react-hot-toast";
 function Attendence() {
